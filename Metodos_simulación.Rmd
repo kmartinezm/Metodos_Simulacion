@@ -27,7 +27,7 @@ A continuación se presentan los siguientes pasos para su verificación:
 +  Realice una simulación en la cual genere una población de $N=1000$  (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del $50\%.$
 
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 #Generar la funcion 
 GenerarPob = function(Tamaño = 1000, Enfermos = 0.5, Sanos = 0.5) {
   E = round(Tamaño * Enfermos, 0)#redondear a cero decimales
@@ -47,7 +47,7 @@ Lote = GenerarPob(Tamaño = 1000, Enfermos = 0.5, Sanos = 0.5) #mostar el tamañ
 
   - Calcule el estimador de la proporción muestral $\hat{p}$ para un tamaño de muestra dado n. 
   
-```{r}
+```{r,warning=FALSE, message=FALSE}
 #Funcion para generar la muestra
 GenerarMuestra = function(Poblacion, Tamaño, Condicion) {
   if (Tamaño<=length(Poblacion)) { #condición muestra mas pequeña de la población
@@ -73,7 +73,7 @@ print(paste("Para una muestra de tamaño:", n, "se obtuvo un ^P =",muestra)) #im
   - ¿qué se puede observar en cuanto a la variabilidad?.
   - Realice en su informe un comentario sobre los resultados obtenidos.  
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 #generación de 500 muestras de la población y mirar las proporciones muestrales de enfermos en cada una.
 GenerarMuestras_Iter = function(Poblacion, Tamaño, Condicion, Iteraciones) { #condiciones de la funcion
   if (Tamaño<=length(Poblacion)) {
@@ -96,7 +96,7 @@ P_muestras = GenerarMuestras_Iter (Poblacion = Lote, Tamaño = n,
 
 ```
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 hist(P_muestras, prob = TRUE, main = "Proporción enfermos en las 500 muestras")
 line = mean(P_muestras)
 abline(v=line, col="blue", lwd=3)
@@ -121,7 +121,7 @@ kurtosis(P_muestras)
 ```
 + Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 t_Muestras = c(10,15,20,30,50,60,100,200,500)
 iter = 500
 
@@ -156,7 +156,7 @@ for (i in 1:length(t_Muestras)) {
 
 ## Para el 90%  de plantas enfermas
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 Lote3 = GenerarPob(Tamaño = 1000, Enfermos = 0.9, Sanos = 0.1)
 ```
 ```{r}
@@ -165,7 +165,7 @@ muestra3 = GenerarMuestra (Poblacion = Lote3, Tamaño = n, Condicion = "Enfermo"
 
 print(paste("Para una muestra de tamaño:", n3, "se obtuvo un ^P =",muestra3))
 ```
-```{r}
+```{r,warning=FALSE, message=FALSE}
 P_muestras3 = GenerarMuestras_Iter (Poblacion = Lote3, Tamaño = n, Condicion = "Enfermo",Iteraciones = iter)
 
 hist(P_muestras3,prob = TRUE, main = "Histogram with density curve")
@@ -179,7 +179,7 @@ Resultado3=data.frame("ID"=0,"Tamaño_muestra"=n3, "Media"=mean(P_muestras3),"Me
 Resultado3
 ```
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 for (i in 1:length(t_Muestras)) {
      P_muestras = GenerarMuestras_Iter (Poblacion = Lote3, Tamaño = t_Muestras[i], Condicion = "Enfermo",Iteraciones = iter)
      par(mfrow=c(1,2))
@@ -206,7 +206,7 @@ for (i in 1:length(t_Muestras)) {
 ```
 
 
-```{r}
+```{r,warning=FALSE, message=FALSE}
 Resultado3
 ```
 
