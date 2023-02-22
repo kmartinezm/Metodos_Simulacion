@@ -1,0 +1,213 @@
+---
+title: "Actividad 2"
+author: "Jairo Enrique Alba"
+date: "21/2/2023"
+output: pdf_document
+---
+
+```{r}
+#Para que funcione como pdf se deben ejecutar estas dos lineas
+#install.packages('tinytex')
+#tinytex::install_tinytex()
+```
+
+
+
+# Teorema del Límite Central
+
+El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal. Algunos autores afirman que esta aproximación es bastante buena a partir del umbral $n>30.$
+
+A continuación se presentan los siguientes pasos para su verificación:
+
+
+
+## Ejercicio 1.
+
+
++  Realice una simulación en la cual genere una población de $N=1000$  (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del $50\%.$
+
+
+```{r}
+#Generar la funcion 
+GenerarPob = function(Tamaño = 1000, Enfermos = 0.5, Sanos = 0.5) {
+  E = round(Tamaño * Enfermos, 0)#redondear a cero decimales
+  S = round(Tamaño * Sanos, 0)#redondear a cero decimales
+  Poblacion = c(rep("Enfermo", E), rep("Sana",S))#creo un vector con Enfermo  E veces y con Sana S veces( E ..E S..S).
+  print(paste("Lote Generado de tamaño: ", Tamaño, " Enfermos: ",E,"Sanos: ",S))#combinan varias entradas en una cadena de caracteres, luego imprime los resultados
+  return(Poblacion)#R  devolverá el resultado de cualquier comando que se ejecute en la última línea de la función
+ 
+}
+
+Lote = GenerarPob(Tamaño = 1000, Enfermos = 0.5, Sanos = 0.5) #mostar el tamaño de población y cuantos hay en cada categoria
+```
+
++ Genere una función que permita:
+
+  - Obtener una muestra aleatoria de la población y
+
+  - Calcule el estimador de la proporción muestral $\hat{p}$ para un tamaño de muestra dado n. 
+  
+```{r}
+#Funcion para generar la muestra
+GenerarMuestra = function(Poblacion, Tamaño, Condicion) {
+  if (Tamaño<=length(Poblacion)) { #condición muestra mas pequeña de la población
+    muestra = sample(x = Poblacion, size = Tamaño)#toma la muestra
+    P_muestra = sum(muestra == Condicion)/Tamaño # para calcular la proporción
+    return(P_muestra)#devuelve el resultado
+  }
+  else { #de lo contario si el tamaño de la muestra supera la población
+    print("Error: el tamaño de la muestra supera el tamaño de la población.")
+    return(-1)
+  }
+}
+
+#Generacion de la muestra de determinado tamaño
+
+n = 200 #tamaño de muestra
+muestra = GenerarMuestra (Poblacion = Lote, Tamaño = n, Condicion = "Enfermo") #generación de la muestra, dando las condiciones respectivas
+
+print(paste("Para una muestra de tamaño:", n, "se obtuvo un ^P =",muestra)) #imprimir los resultados
+```
++ Repita el escenario anterior (b) $n=500$ veces y analice los resultados en cuanto al comportamiento de los $500$ resultados del estimador $\hat{p}.$
+  -  ¿Qué tan simétricos o sesgados son los resultados obtenidos? y 
+  - ¿qué se puede observar en cuanto a la variabilidad?.
+  - Realice en su informe un comentario sobre los resultados obtenidos.  
+
+```{r}
+#generación de 500 muestras de la población y mirar las proporciones muestrales de enfermos en cada una.
+GenerarMuestras_Iter = function(Poblacion, Tamaño, Condicion, Iteraciones) { #condiciones de la funcion
+  if (Tamaño<=length(Poblacion)) {
+    muestras_iter = array(NA,Iteraciones)#creación del array con NA, de dimensión el numero de iteraciones.
+    for (i in 1:Iteraciones) {
+      muestras_iter[i] = GenerarMuestra (Poblacion, Tamaño, Condicion)
+    }
+    return(muestras_iter)
+  }
+  else {
+    print("Error: el tamaño de la muestra supera el tamaño de la población.")
+    return(-1)
+  }
+}
+
+
+iter = 500
+P_muestras = GenerarMuestras_Iter (Poblacion = Lote, Tamaño = n, 
+                                   Condicion = "Enfermo",Iteraciones = iter)
+
+```
+
+```{r}
+hist(P_muestras, prob = TRUE, main = "Proporción enfermos en las 500 muestras")
+line = mean(P_muestras)
+abline(v=line, col="blue", lwd=3)
+lines(density(P_muestras), col = 2, lwd = 2)
+
+library(dplyr)
+
+# Diagrama de caja
+boxplot(P_muestras, main = "Proporción enfermos en las 500 muestras",
+        xlab = "Proporción enfermos", col = "green", horizontal=T)
+
+#install.packages("moments") solo una vez
+library(moments)
+mean(P_muestras)                                                         
+sd(P_muestras)                                                           
+min(P_muestras)                                                                                                 
+median(P_muestras)                                                       
+max(P_muestras)                                                                                               
+skewness(P_muestras)
+kurtosis(P_muestras)
+
+```
++ Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.
+
+```{r}
+t_Muestras = c(10,15,20,30,50,60,100,200,500)
+iter = 500
+
+
+
+for (i in 1:length(t_Muestras)) {
+     P_muestras = GenerarMuestras_Iter (Poblacion = Lote, Tamaño = t_Muestras[i], Condicion = "Enfermo",Iteraciones = iter)
+     par(mfrow=c(1,3))
+     hist(P_muestras, las=1, ylab = "Frecuencia", title = t_Muestras[i], main = paste("Muestra de tamaño:", t_Muestras[i]), col = "gray",prob = TRUE)
+     abline(v=mean(P_muestras), col="blue", lwd=3)
+     lines(density(P_muestras), col = 2, lwd = 2)
+     boxplot(P_muestras, xlab="Cuantiles teóricos", ylab="Cuantiles muestrales",main="qq-normalidad")
+     qqnorm(P_muestras, xlab="Cuantiles teóricos", ylab="Cuantiles muestrales",main="qq-normalidad")
+     qqline(P_muestras,col = 'red', lwd = 2, lty = 2)
+     print(paste('Para una muestra de tamaño: ', t_Muestras[i])) 
+     print(shapiro.test(P_muestras))
+     x=data.frame("ID"=i,"Tamaño_muestra"=t_Muestras[i], 
+                  "Media"=mean(P_muestras),
+                  "Mediana"=median(P_muestras),
+                  "Desvest"=sd(P_muestras),
+                  "Varianza"=var(P_muestras), 
+                  "Mín."=min(P_muestras), 
+                  "Máx"=max(P_muestras),
+                  "Asimetría"=skewness(P_muestras), 
+                  "Curtosis"= kurtosis(P_muestras)
+                  )
+    Resultado = rbind(x)
+     } 
+```
+
++ Repita toda la simulación (puntos a – d), pero ahora para lotes con 10% de plantas enfermas y de nuevo para lotes con un 90% de plantas enfermas. Concluya sobre los resultados del ejercicio.
+
+## Para el 90%  de plantas enfermas
+
+```{r}
+Lote3 = GenerarPob(Tamaño = 1000, Enfermos = 0.9, Sanos = 0.1)
+```
+```{r}
+n3 = 300
+muestra3 = GenerarMuestra (Poblacion = Lote3, Tamaño = n, Condicion = "Enfermo")
+
+print(paste("Para una muestra de tamaño:", n3, "se obtuvo un ^P =",muestra3))
+```
+```{r}
+P_muestras3 = GenerarMuestras_Iter (Poblacion = Lote3, Tamaño = n, Condicion = "Enfermo",Iteraciones = iter)
+
+hist(P_muestras3,prob = TRUE, main = "Histogram with density curve")
+line = mean(P_muestras3)
+abline(v=line, col="blue", lwd=3)
+lines(density(P_muestras3), col = 2, lwd = 2)
+```
+```{r}
+Resultado3=data.frame("ID"=0,"Tamaño_muestra"=n3, "Media"=mean(P_muestras3),"Mediana"=median(P_muestras3),"Desvest"=sd(P_muestras3),"Varianza"=var(P_muestras3), "Mín."=min(P_muestras3), "Máx"=max(P_muestras3),"Asimetría"=skewness(P_muestras3), "Curtosis"= kurtosis(P_muestras3))
+
+Resultado3
+```
+
+```{r}
+for (i in 1:length(t_Muestras)) {
+     P_muestras = GenerarMuestras_Iter (Poblacion = Lote3, Tamaño = t_Muestras[i], Condicion = "Enfermo",Iteraciones = iter)
+     par(mfrow=c(1,2))
+     hist(P_muestras, las=1, ylab = "Frecuencia", title = t_Muestras[i], main = paste("Muestra de tamaño:", t_Muestras[i]), col = "gray",prob = TRUE)
+     abline(v=mean(P_muestras), col="blue", lwd=3)
+     lines(density(P_muestras), col = 2, lwd = 2)
+     qqnorm(P_muestras, xlab="Cuantiles teóricos", ylab="Cuantiles muestrales",main="qq-normalidad")
+     qqline(P_muestras,col = 'red', lwd = 2, lty = 2)
+     print(paste('Para una muestra de tamaño: ', t_Muestras[i])) 
+     print(shapiro.test(P_muestras))
+     x=data.frame("ID"=i,"Tamaño_muestra"=t_Muestras[i], 
+                  "Media"=mean(P_muestras),
+                  "Mediana"=median(P_muestras),
+                  "Desvest"=sd(P_muestras),
+                  "Varianza"=var(P_muestras), 
+                  "Mín."=min(P_muestras), 
+                  "Máx"=max(P_muestras),
+                  "Asimetría"=skewness(P_muestras), 
+                  "Curtosis"= kurtosis(P_muestras)
+                  )
+     Resultado3=rbind(Resultado3,x)
+     } 
+
+```
+
+
+```{r}
+Resultado3
+```
+
+## Para el 10%  de plantas enfermas
