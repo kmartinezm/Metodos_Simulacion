@@ -1,0 +1,128 @@
+---
+title: "Actividad 1 - Teorema del Límite Central"
+author: "Keyner Martinez - Metodos y Similución Estadística"
+date: "2023-02-21"
+output: html_document
+---
+
+
+**Descripción**
+
+El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal.
+
+**Desarrollo**
+
+Una población de ***N = 1000***, donde el porcentaje individuos (supongamos plantas) enfermas sea en la primera simulación del 50%, segunda simulación del 10% y la última simulación con un 90% de plantas enfermas.
+
+Genere una función que permita obtener una muestra aleatoria de la población y calcule el estiamdor de la proporción muestral ***p*** para un tamaño de muestra **n=500** y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador ***p***.
+
+```{r}
+# Población
+pob <- 1000
+
+# número de simulaciones
+nsim <- 500
+
+# tamaños de las muestras
+muestra_vect <- c(5,10,15,20,30,50,60,100,200,500) 
+
+# porcentaje de plantas enfermas 500=0.5 ; 900=0.9 ; 100=0.1
+p <- c(500,900,100) 
+
+# almacenamiento de los resultados de cada simulación
+sim_pob <- list()
+med_sim <- vector(length=nsim)
+lista_med <- list()
+lista_alt <- list()
+lista_baj <- list()
+repetidor <- vector()
+```
+
+```{r}
+# generando población de plantas enfermas 50% ; 90% ; 10%
+for (i in 1:3) {
+  repetidor <- rep(c(1,0),times=c(p[i],pob-p[i]))
+  sim_pob[[i]] <- repetidor
+}
+```
+
+```{r}
+# genera la muestra
+muestra <- function(poblacion,n){
+  return(sample(poblacion,n))
+}
+
+# calculó del estimador de cada una de las muestras
+
+for (i in 1:3) {
+  for (j in 1:10) {
+    for (z in 1:nsim) {
+      x <- muestra(sim_pob[[i]],muestra_vect[j])
+      med_sim[z] <- mean(x)
+      
+    }
+    if(i==1){
+      lista_med[[j]] <- med_sim
+    } else if (i==2) {
+      lista_alt[[j]] <- med_sim
+    } else {
+      lista_baj[[j]] <- med_sim
+    }
+  }
+}
+
+```
+
+***Resultados***
+
+Los resultados obtenidos de las muestras descritas con el ***50% de las plantas enfermas*** fue el siguiente:
+
+```{r}
+par(mfrow=c(3,2))
+hist(lista_med[[1]],main="Histograma de Medias n=5",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[2]],main="Histograma de Medias n=10",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[3]],main="Histograma de Medias n=15",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[4]],main="Histograma de Medias n=20",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[5]],main="Histograma de Medias n=30",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[6]],main="Histograma de Medias n=50",xlab="Media",ylab="Frecuencia")
+```
+
+```{r}
+par(mfrow=c(2,2))
+hist(lista_med[[7]],main="Histograma de Medias n=60",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[8]],main="Histograma de Medias n=100",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[9]],main="Histograma de Medias n=200",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[10]],main="Histograma de Medias n=500",xlab="Media",ylab="Frecuencia")
+```
+
+```{r}
+list_df <- list()
+
+for (i in 1:10) {
+  df <- data.frame("proporcion"=lista_med[[i]])
+  tma_muestra <- as.character(muestra_vect[i])
+  tma_muestra <- paste("n =",tma_muestra)
+  df$muestra <- tma_muestra
+  list_df[[i]] <- df
+}
+
+library(dplyr)
+
+df_total <- bind_rows(list_df[[1]],list_df[[2]],list_df[[3]],list_df[[4]],list_df[[5]],list_df[[6]],list_df[[7]],list_df[[8]],list_df[[9]],list_df[[10]])
+```
+
+```{r}
+library(ggplot2)
+
+df_total$muestra <- factor(df_total$muestra,c("n = 5","n = 10","n = 15","n = 20","n = 30","n = 50","n = 60","n = 100","n = 200","n = 500"))
+
+ggplot(df_total,aes(x=df_total$muestra,y=df_total$proporcion,fill=df_total$muestra))+
+  geom_boxplot()+
+  theme(legend.position = 'bottom')+
+  theme(panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())+
+  labs(x='',y='Proporción P',fill='Tamaño de Muestras')
+```
+
+
