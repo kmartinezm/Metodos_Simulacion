@@ -1,22 +1,49 @@
 ---
 title: "Actividad 1 - Teorema del Límite Central"
-author: "Keyner Martinez - Metodos y Similución Estadística"
+author: "Keyner Martinez y Jairo Alba - Metodos y Similución Estadística"
 date: "2023-02-21"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 
-**Descripción**
-
+## **1. Introducción**
+<div class=pull-justify>
 El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal.
 
-**Desarrollo**
+Supongamos que la población donde se hace el muestreo es finita de tamaño *N* y sea *X~1~, X~2~, ..., X~n~* una muestra aleatoria de tamaño *n*, tomada de una población con media y varianza. Entonces, si *n* es lo suficientemente grande, *X* tiene una distribución normal aproximada, es decir:
 
-Una población de ***N = 1000***, donde el porcentaje individuos (supongamos plantas) enfermas sea en la primera simulación del 50%, segunda simulación del 10% y la última simulación con un 90% de plantas enfermas.
+- La media de la distribución muestral es igual a la media de la población en que se toma la muestra.
+- La varianza de la distribución muestral es igual a la varianza de la población dividida por el tamaño de la muestra.
 
-Genere una función que permita obtener una muestra aleatoria de la población y calcule el estiamdor de la proporción muestral ***p*** para un tamaño de muestra **n=500** y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador ***p***.
+El potencial de este teorema está en que no importa la distribución de la variable X, la distribución de la media proveniente de la muestra tomada de esta población se distribuye aproximadamente normal.
+
+</div>
+
+## **2. Desarrollo del proyecto**
+
+<div class=text-justify>
+Para verificar el teorema del límite central, descrito en la sección 1, generamos una población (supongamos plantas) de ***N = 1000***, donde analizamos tres simulaciones, la primera simulación corresponde a que el cincuenta por ciento (50%) de la población se encuentra enferma, la segunda simulación con una población enferma del noventa por ciento (90%) y la última simulación con un diez por ciento (10%) de la población enferma.
+
+
+Para cada población se tomaron ***500 muestras*** de tamaños ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500***, y analizamos los resultados obtenidos para cada población.
+
+
+En razón de lo anterior, se realizó el siguiente código, para generar cada una de las simulaciones con las especificaciones anteriormente descritas:
+
+</div>
+
+```{r,echo=FALSE}
+library(ggplot2)
+library(dplyr)
+library(formattable)
+```
 
 ```{r}
+# especificando semilla
+set.seed(138)
+
 # Población
 pob <- 1000
 
@@ -26,17 +53,23 @@ nsim <- 500
 # tamaños de las muestras
 muestra_vect <- c(5,10,15,20,30,50,60,100,200,500) 
 
+muestras_chr <- c("n = 5","n = 10","n = 15","n = 20","n = 30","n = 50","n = 60",
+                  "n = 100","n = 200","n = 500")
+
+
 # porcentaje de plantas enfermas 500=0.5 ; 900=0.9 ; 100=0.1
 p <- c(500,900,100) 
 
-# almacenamiento de los resultados de cada simulación
+# variables de almacenamiento de los resultados de cada simulación
 sim_pob <- list()
 med_sim <- vector(length=nsim)
-lista_med <- list()
-lista_alt <- list()
-lista_baj <- list()
+lista_med <- list() # lista de estimadores con población del 50% de plantas enfermas
+lista_alt <- list() # lista de estimadores con población del 90% de plantas enfermas
+lista_baj <- list() # lista de estimadores con población del 10% de plantas enfermas
 repetidor <- vector()
 ```
+
+a) Se generan las poblaciones de plantas enfermas del 50%, 90% y 10%:
 
 ```{r}
 # generando población de plantas enfermas 50% ; 90% ; 10%
@@ -45,6 +78,8 @@ for (i in 1:3) {
   sim_pob[[i]] <- repetidor
 }
 ```
+
+b) Se genera una función que permite i) obtener muestras aleatorias dado la población y el tamaño de muestras; y ii) calcula los estimadores de la proporción muestral para un tamaño de muestra dado:
 
 ```{r}
 # genera la muestra
@@ -73,29 +108,138 @@ for (i in 1:3) {
 
 ```
 
-***Resultados***
+## **3. Análisis de los Resultados**
 
-Los resultados obtenidos de las muestras descritas con el ***50% de las plantas enfermas*** fue el siguiente:
+<div class=text-justify>
+En esta sección, nos centraremos en analizar los resultados obtenidos en las distintas simulaciones y verificar el teorema del limite central.
+</div>
+### **3.1. Caso 1**
 
-```{r}
+<div class=text-justify>
+
+El primer caso, se ha extraído una muestra aleatoria de tamaño ***n = 500*** de una población de plantas con tamaño ***N = 1000*** de cincuenta por ciento (50%) de plantas enfermas.
+
+En el gráfico de distribución de la proporción de cada una de las muestras se observa que, **i)** mientras la población tiene una proporción del 50% de plantas enfermas, la media de la proporción muestral indica lo mismo, es decir, la muestra tomada tiene una proporción del 50% de plantas enfermas; **ii)** cuando *n* es grande, en este caso *n = 500*, algunos autores establecen que la aproximación es bastante buena y así se comprobó, se puede observar que la media de la proporción muestral tiene una distribución normal.
+
+</div>
+```{r,echo=FALSE}
+
+hist(lista_med[[10]],main="Distribución Muestral n=500",xlab="Figura 1. Histograma y curva de densidad de las distribución muestral",prob = TRUE)
+var_media <- mean(lista_med[[10]])
+var_media <- formattable::comma(var_media,digits=2)
+chr_media <- as.character(var_media)
+chr_media <- paste("ux = ",chr_media)
+d <- density(lista_med[[10]])
+abline(v=var_media,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d,col="#0072F0",lwd=2)
+text(0.53, 20, chr_media)
+
+```
+<div class=text-justify>
+Los estimadores son variables aleatorias que toman su valor de los datos obtenidos en una muestra y que siguen una distribución conocida, pero además poseen propiedades deseables como son: insesgadez, eficiencia, consistencia, entre otros.
+
+Se observa en la siguiente figura, donde los estimadores, para el presente caso, presentan una alta precisión (poca varianza), no presentan sesgo y es consistente.
+</div>
+
+```{r,echo=FALSE}
+boxplot(lista_med[[10]],main="Distribución de los estimadores n=500", xlab = "Figura 2. Boxplot de la distribución de los estimadores ", col = "#0072F0", horizontal = FALSE)
+```
+
+```{r,echo=FALSE}
+df_case1 <- data.frame("muestras"=c("n=500")); df_case1$media <- mean(lista_med[[10]]) ; df_case1$varianza <- var(lista_med[[10]])
+df_case1
+```
+
+
+### **3.2. Caso 2 **
+<div class=text-justify>
+
+El segundo caso, se ha extraído muestra aleatoria de tamaño ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** de una población de plantas con tamaño ***N = 1000*** de cincuenta por ciento (50%) de plantas enfermas.
+
+A continuación, se muestra los datos y gráficos de distribución de la proporción de cada una de las muestras, se observa que, ***i)*** mientras la población tiene una proporción del 50% de plantas enfermas, la media de la proporción muestral indica lo mismo, es decir, la muestra tomada tiene una proporción del 50% de plantas enfermas; ***ii)*** mientras aumenta el tamaño de la muestra se observa que la distribución de las media proporcional se va transformando en una distribución simétrica, hasta convertirse en una normal; ***iii)*** mientras aumenta el tamaño de la muestra los estimadores presentan alta precisión, por lo cual, la varianza disminuye conforme aumenta los tamaños de la muestra.
+
+</div>
+
+```{r,echo=FALSE}
 par(mfrow=c(3,2))
-hist(lista_med[[1]],main="Histograma de Medias n=5",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[2]],main="Histograma de Medias n=10",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[3]],main="Histograma de Medias n=15",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[4]],main="Histograma de Medias n=20",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[5]],main="Histograma de Medias n=30",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[6]],main="Histograma de Medias n=50",xlab="Media",ylab="Frecuencia")
-```
-
-```{r}
+hist(lista_med[[1]],main="Distribución muestral n=5",xlab="Fig 3. Media de las proporciones",prob = TRUE)
+d1 <- density(lista_med[[1]])
+m1 <- mean(lista_med[[1]])
+v1 <- var(lista_med[[1]])
+abline(v=m1,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d1,col="#0072F0",lwd=2)
+hist(lista_med[[2]],main="Distribución muestral n=10",xlab="Fig 4. Media de las proporciones",prob = TRUE)
+d2 <- density(lista_med[[2]])
+m2 <- mean(lista_med[[2]])
+v2 <- var(lista_med[[2]])
+abline(v=m2,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d2,col="#0072F0",lwd=2)
+hist(lista_med[[3]],main="Distribución muestral n=15",xlab="Fig 5. Media de las proporciones",prob = TRUE)
+d3 <- density(lista_med[[3]])
+m3 <- mean(lista_med[[3]])
+v3 <- var(lista_med[[3]])
+abline(v=m3,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d3,col="#0072F0",lwd=2)
+hist(lista_med[[4]],main="Distribución muestral n=20",xlab="Fig 6. Media de las proporciones",prob = TRUE)
+d4 <- density(lista_med[[4]])
+m4 <- mean(lista_med[[4]])
+v4 <- var(lista_med[[4]])
+abline(v=m4,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d4,col="#0072F0",lwd=2)
+hist(lista_med[[5]],main="Distribución muestral n=30",xlab="Fig 7. Media de las proporciones",prob = TRUE)
+d5 <- density(lista_med[[5]])
+m5 <- mean(lista_med[[5]])
+v5 <- var(lista_med[[5]])
+abline(v=m5,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d5,col="#0072F0",lwd=2)
+hist(lista_med[[6]],main="Distribución muestral n=50",xlab="Fig 8. Media de las proporciones",prob = TRUE)
+d6 <- density(lista_med[[6]])
+m6 <- mean(lista_med[[6]])
+v6 <- var(lista_med[[6]])
+abline(v=m6,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d6,col="#0072F0",lwd=2)
 par(mfrow=c(2,2))
-hist(lista_med[[7]],main="Histograma de Medias n=60",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[8]],main="Histograma de Medias n=100",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[9]],main="Histograma de Medias n=200",xlab="Media",ylab="Frecuencia")
-hist(lista_med[[10]],main="Histograma de Medias n=500",xlab="Media",ylab="Frecuencia")
+hist(lista_med[[7]],main="Distribución muestral n=60",xlab="Fig 9. Media de las proporciones",prob = TRUE)
+d7 <- density(lista_med[[7]])
+m7 <- mean(lista_med[[7]])
+v7 <- var(lista_med[[7]])
+abline(v=m7,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d7,col="#0072F0",lwd=2)
+hist(lista_med[[8]],main="Distribución muestral n=100",xlab="Fig 10. Media de las proporciones",prob = TRUE)
+d8 <- density(lista_med[[8]])
+m8 <- mean(lista_med[[8]])
+v8 <- var(lista_med[[8]])
+abline(v=m8,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d8,col="#0072F0",lwd=2)
+hist(lista_med[[9]],main="Distribución muestral n=200",xlab="Fig 11. Media de las proporciones",prob = TRUE)
+d9 <- density(lista_med[[9]])
+m9 <- mean(lista_med[[9]])
+v9 <- var(lista_med[[9]])
+abline(v=m9,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d9,col="#0072F0",lwd=2)
+hist(lista_med[[10]],main="Distribución muestral n=500",xlab="Fig 12. Media de las proporciones",prob = TRUE)
+d10 <- density(lista_med[[10]])
+m10 <- mean(lista_med[[10]])
+v10 <- var(lista_med[[10]])
+abline(v=m10,col="#0072F0",lwd = 3, lty = 2:3)
+lines(d10,col="#0072F0",lwd=2)
+
+list_m <- c(m1,m2,m3,m4,m5,m6,m7,m8,m9,m10)
+list_v <- c(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10)
+
 ```
 
-```{r}
+```{r,echo=FALSE}
+df_mmed <- data.frame("muestras"=muestras_chr); df_mmed$media <- list_m ; df_mmed$varianza <- list_v
+df_mmed
+```
+
+<div class=text-justify>
+Así mismo, se puede observar la comparación de los distintos tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** evidencia que al ir aumentando los tamaños muestrales los estimadores tienden a ser insesgado, eficiente y consistente.
+
+</div>
+
+```{r,echo=FALSE}
 list_df <- list()
 
 for (i in 1:10) {
@@ -106,23 +250,370 @@ for (i in 1:10) {
   list_df[[i]] <- df
 }
 
-library(dplyr)
-
 df_total <- bind_rows(list_df[[1]],list_df[[2]],list_df[[3]],list_df[[4]],list_df[[5]],list_df[[6]],list_df[[7]],list_df[[8]],list_df[[9]],list_df[[10]])
 ```
 
-```{r}
-library(ggplot2)
+<div class=text-justify>
+Se puede observar que a medida que aumenta los tamaños de muestra, es decir, que el limite tiende a ***N = 1000*** hay menos variabilidad:
+</div>
+
+```{r,echo=FALSE}
 
 df_total$muestra <- factor(df_total$muestra,c("n = 5","n = 10","n = 15","n = 20","n = 30","n = 50","n = 60","n = 100","n = 200","n = 500"))
 
-ggplot(df_total,aes(x=df_total$muestra,y=df_total$proporcion,fill=df_total$muestra))+
+ggplot(df_total,aes(x=muestra,y=proporcion,fill=muestra))+
   geom_boxplot()+
   theme(legend.position = 'bottom')+
   theme(panel.background = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())+
-  labs(x='',y='Proporción P',fill='Tamaño de Muestras')
+  labs(x='Figura 13. Boxplot de las distribuciones de los estimadores',y='Proporción P',fill='Tamaño de Muestras')
 ```
 
+<div class=text-justify>
+Posteriormente se realizó un test de normalidad ***SHAPIRO-WILK***, es una de las más utilizadas y eficiente para comprobar la normalidad de una variable. En este caso, la hipotesis nula del test es que la población representa una distribución normal. Por lo tanto, un valor menor a 0.05 indica que se debe rechazar la hipótesis nula, es decir, los datos no poseen distribución normal.
 
+A continuación, se muestra una tabla de los resultados de la prueba para cada uno de los tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500***, donde se puede observar la convergencia de la distribución de la media muestral a una distribución normal al aumentarse el tamaño de la muestra, más especificamente, a partir del tamaño de muestra ***n = 100***.
+</div>
+
+```{r,echo=FALSE}
+shpn1 <- shapiro.test(lista_med[[1]]) ; shpn1 <- shpn1$p.value ;shpn1 <- formattable::comma(shpn1,digits=2)
+shpn2 <- shapiro.test(lista_med[[2]]) ; shpn2 <- shpn2$p.value ; shpn2 <- formattable::comma(shpn2,digits=2)
+shpn3 <- shapiro.test(lista_med[[3]]); shpn3 <- shpn3$p.value; shpn3 <- formattable::comma(shpn3,digits=2)
+shpn4 <- shapiro.test(lista_med[[4]]); shpn4 <- shpn4$p.value; shpn4 <- formattable::comma(shpn4,digits=2)
+shpn5 <- shapiro.test(lista_med[[5]]); shpn5 <- shpn5$p.value; shpn5 <- formattable::comma(shpn5,digits=2)
+shpn6 <- shapiro.test(lista_med[[6]]); shpn6 <- shpn6$p.value; shpn6 <- formattable::comma(shpn6,digits=2)
+shpn7 <- shapiro.test(lista_med[[7]]); shpn7 <- shpn7$p.value; shpn7 <- formattable::comma(shpn7,digits=2)
+shpn8 <- shapiro.test(lista_med[[8]]); shpn8 <- shpn8$p.value; shpn8 <- formattable::comma(shpn8,digits=2)
+shpn9 <- shapiro.test(lista_med[[9]]); shpn9 <- shpn9$p.value; shpn9 <- formattable::comma(shpn9,digits=2)
+shpn10 <- shapiro.test(lista_med[[10]]); shpn10 <- shpn10$p.value; shpn10 <- formattable::comma(shpn10,digits=2)
+shp_med <- c(shpn1,shpn2,shpn3,shpn4,shpn5,shpn6,shpn7,shpn8,shpn9,shpn10)
+
+df_medshp <- data.frame("muestras"=muestras_chr); df_medshp$shapiro <- shp_med
+df_medshp
+
+```
+<div class=text-justify>
+Así mismo, se muestra la prueba de normalidad de una linea recta, donde evidenciamos que a medida que aumenta los tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** los puntos se acercan a la línea recta.
+</div>
+
+```{r,echo=FALSE}
+par(mfrow=c(3,2))
+qqnorm(lista_med[[1]],main="Normal Q-Q Plot n=5"); qqline(lista_med[[1]],col="red")
+qqnorm(lista_med[[2]],main="Normal Q-Q Plot n=10"); qqline(lista_med[[2]],col="red")
+qqnorm(lista_med[[3]],main="Normal Q-Q Plot n=15"); qqline(lista_med[[3]],col="red")
+qqnorm(lista_med[[4]],main="Normal Q-Q Plot n=20"); qqline(lista_med[[4]],col="red")
+qqnorm(lista_med[[5]],main="Normal Q-Q Plot n=30"); qqline(lista_med[[5]],col="red")
+qqnorm(lista_med[[6]],main="Normal Q-Q Plot n=50"); qqline(lista_med[[6]],col="red")
+par(mfrow=c(2,2))
+qqnorm(lista_med[[7]],main="Normal Q-Q Plot n=60"); qqline(lista_med[[7]],col="red")
+qqnorm(lista_med[[8]],main="Normal Q-Q Plot n=100"); qqline(lista_med[[8]],col="red")
+qqnorm(lista_med[[9]],main="Normal Q-Q Plot n=200"); qqline(lista_med[[9]],col="red")
+qqnorm(lista_med[[10]],main="Normal Q-Q Plot n=500"); qqline(lista_med[[10]],col="red")
+```
+
+### **3.3. Caso 3. **
+<div class=text-justify>
+El tercer caso, se ha extraído muestra aleatoria de tamaño ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** de una población de plantas con tamaño ***N = 1000*** de noventa por ciento (90%) de plantas enfermas.
+
+A continuación, se muestra los datos y gráficos de distribución de la proporción de cada una de las muestras, se observa que, ***i)*** mientras la población tiene una proporción del 90% de plantas enfermas, la media de la proporción muestral indica lo mismo, es decir, la muestra tomada tiene una proporción del 90% de plantas enfermas; ***ii)*** mientras aumenta el tamaño de la muestra se observa que la distribución de las media proporcional se va transformando en una distribución simétrica, hasta convertirse en una normal; ***iii)*** mientras aumenta el tamaño de la muestra los estimadores presentan alta precisión, por lo cual, la varianza disminuye conforme aumenta los tamaños de la muestra.
+
+</div>
+
+```{r,echo=FALSE}
+par(mfrow=c(3,2))
+hist(lista_alt[[1]],main="Distribución muestral n=5",xlab="Fig 14. Media de las proporciones",prob = TRUE)
+da1 <- density(lista_alt[[1]])
+ma1 <- mean(lista_alt[[1]])
+va1 <- var(lista_alt[[1]])
+abline(v=ma1,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da1,col="#0072F0",lwd=2)
+hist(lista_alt[[2]],main="Distribución muestral n=10",xlab="Fig 15. Media de las proporciones",prob = TRUE)
+da2 <- density(lista_alt[[2]])
+ma2 <- mean(lista_alt[[2]])
+va2 <- var(lista_alt[[2]])
+abline(v=ma2,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da2,col="#0072F0",lwd=2)
+hist(lista_alt[[3]],main="Distribución muestral n=15",xlab="Fig 16. Media de las proporciones",prob = TRUE)
+da3 <- density(lista_alt[[3]])
+ma3 <- mean(lista_alt[[3]])
+va3 <- var(lista_alt[[3]])
+abline(v=ma3,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da3,col="#0072F0",lwd=2)
+hist(lista_alt[[4]],main="Distribución muestral n=20",xlab="Fig 17. Media de las proporciones",prob = TRUE)
+da4 <- density(lista_alt[[4]])
+ma4 <- mean(lista_alt[[4]])
+va4 <- var(lista_alt[[4]])
+abline(v=ma4,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da4,col="#0072F0",lwd=2)
+hist(lista_alt[[5]],main="Distribución muestral n=30",xlab="Fig 18. Media de las proporciones",prob = TRUE)
+da5 <- density(lista_alt[[5]])
+ma5 <- mean(lista_alt[[5]])
+va5 <- var(lista_alt[[5]])
+abline(v=ma5,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da5,col="#0072F0",lwd=2)
+hist(lista_alt[[6]],main="Distribución muestral n=50",xlab="Fig 19. Media de las proporciones",prob = TRUE)
+da6 <- density(lista_alt[[6]])
+ma6 <- mean(lista_alt[[6]])
+va6 <- var(lista_alt[[6]])
+abline(v=ma6,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da6,col="#0072F0",lwd=2)
+par(mfrow=c(2,2))
+hist(lista_alt[[7]],main="Distribución muestral n=60",xlab="Fig 20. Media de las proporciones",prob = TRUE)
+da7 <- density(lista_alt[[7]])
+ma7 <- mean(lista_alt[[7]])
+va7 <- var(lista_alt[[7]])
+abline(v=ma7,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da7,col="#0072F0",lwd=2)
+hist(lista_alt[[8]],main="Distribución muestral n=100",xlab="Fig 21. Media de las proporciones",prob = TRUE)
+da8 <- density(lista_alt[[8]])
+ma8 <- mean(lista_alt[[8]])
+va8 <- var(lista_alt[[8]])
+abline(v=ma8,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da8,col="#0072F0",lwd=2)
+hist(lista_alt[[9]],main="Distribución muestral n=200",xlab="Fig 22. Media de las proporciones",prob = TRUE)
+da9 <- density(lista_alt[[9]])
+ma9 <- mean(lista_alt[[9]])
+va9 <- var(lista_alt[[9]])
+abline(v=ma9,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da9,col="#0072F0",lwd=2)
+hist(lista_alt[[10]],main="Distribución muestral n=500",xlab="Fig 23. Media de las proporciones",prob = TRUE)
+da10 <- density(lista_alt[[10]])
+ma10 <- mean(lista_alt[[10]])
+va10 <- var(lista_alt[[10]])
+abline(v=ma10,col="#0072F0",lwd = 3, lty = 2:3)
+lines(da10,col="#0072F0",lwd=2)
+
+list_ma <- c(ma1,ma2,ma3,ma4,ma5,ma6,ma7,ma8,ma9,ma10)
+list_va <- c(va1,va2,va3,va4,va5,va6,va7,va8,va9,va10)
+
+```
+
+```{r,echo=FALSE}
+df_malt <- data.frame("muestras"=muestras_chr); df_malt$media <- list_ma ; df_malt$varianza <- list_va
+df_malt
+```
+<div class=text-justify>
+Así mismo, se puede observar la comparación de los distintos tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** evidencia que al ir aumentando los tamaños muestrales los estimadores tienden a ser insesgado, eficiente y consistente.  
+</div>
+
+```{r,echo=FALSE}
+list_df_alt <- list()
+
+for (i in 1:10) {
+  df_alt <- data.frame("proporcion"=lista_alt[[i]])
+  tma_muestra_alt <- as.character(muestra_vect[i])
+  tma_muestra_alt <- paste("n =",tma_muestra_alt)
+  df_alt$muestra <- tma_muestra_alt
+  list_df_alt[[i]] <- df_alt
+}
+
+df_total_alt <- bind_rows(list_df_alt[[1]],list_df_alt[[2]],list_df_alt[[3]],list_df_alt[[4]],list_df_alt[[5]],list_df_alt[[6]],list_df_alt[[7]],list_df_alt[[8]],list_df_alt[[9]],list_df_alt[[10]])
+```
+
+```{r,echo=FALSE}
+
+df_total_alt$muestra <- factor(df_total_alt$muestra,c("n = 5","n = 10","n = 15","n = 20","n = 30","n = 50","n = 60","n = 100","n = 200","n = 500"))
+
+ggplot(df_total_alt,aes(x=muestra,y=proporcion,fill=muestra))+
+  geom_boxplot()+
+  theme(legend.position = 'bottom')+
+  theme(panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())+
+  labs(x='Figura 24. Boxplot de las distribuciones de los estimadores',y='Proporción P',fill='Tamaño de Muestras')
+```
+<div class=text-justify>
+A continuación, se muestra una tabla de los resultados de la prueba ***SHAPIRO-WILK***, descrita en la anterior caso, para cada uno de los tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500***, donde se puede observar la convergencia de la distribución de la media muestral a una distribución normal al aumentarse el tamaño de la muestra, más especificamente, a partir del tamaño de muestra ***n = 500***.
+</div>
+
+```{r,echo=FALSE}
+shpna1 <- shapiro.test(lista_alt[[1]]) ; shpna1 <- shpna1$p.value ;shpna1 <- formattable::comma(shpna1,digits=2)
+shpna2 <- shapiro.test(lista_alt[[2]]) ; shpna2 <- shpna2$p.value ; shpna2 <- formattable::comma(shpna2,digits=2)
+shpna3 <- shapiro.test(lista_alt[[3]]); shpna3 <- shpna3$p.value; shpna3 <- formattable::comma(shpna3,digits=2)
+shpna4 <- shapiro.test(lista_alt[[4]]); shpna4 <- shpna4$p.value; shpna4 <- formattable::comma(shpna4,digits=2)
+shpna5 <- shapiro.test(lista_alt[[5]]); shpna5 <- shpna5$p.value; shpna5 <- formattable::comma(shpna5,digits=2)
+shpna6 <- shapiro.test(lista_alt[[6]]); shpna6 <- shpna6$p.value; shpna6 <- formattable::comma(shpna6,digits=2)
+shpna7 <- shapiro.test(lista_alt[[7]]); shpna7 <- shpna7$p.value; shpna7 <- formattable::comma(shpna7,digits=2)
+shpna8 <- shapiro.test(lista_alt[[8]]); shpna8 <- shpna8$p.value; shpna8 <- formattable::comma(shpna8,digits=2)
+shpna9 <- shapiro.test(lista_alt[[9]]); shpna9 <- shpna9$p.value; shpna9 <- formattable::comma(shpna9,digits=2)
+shpna10 <- shapiro.test(lista_alt[[10]]); shpna10 <- shpna10$p.value; shpna10 <- formattable::comma(shpna10,digits=2)
+shp_alt <- c(shpna1,shpna2,shpna3,shpna4,shpna5,shpna6,shpna7,shpna8,shpna9,shpna10)
+
+df_altshp <- data.frame("muestras"=muestras_chr); df_altshp$shapiro <- shp_alt
+df_altshp
+
+```
+<div class=text-justify>
+Así mismo, se muestra la prueba de normalidad de una linea recta, donde evidenciamos que a medida que aumenta los tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** los puntos se acercan a la línea recta.
+</div>
+
+```{r,echo=FALSE}
+par(mfrow=c(3,2))
+qqnorm(lista_alt[[1]],main="Normal Q-Q Plot n=5"); qqline(lista_alt[[1]],col="red")
+qqnorm(lista_alt[[2]],main="Normal Q-Q Plot n=10"); qqline(lista_alt[[2]],col="red")
+qqnorm(lista_alt[[3]],main="Normal Q-Q Plot n=15"); qqline(lista_alt[[3]],col="red")
+qqnorm(lista_alt[[4]],main="Normal Q-Q Plot n=20"); qqline(lista_alt[[4]],col="red")
+qqnorm(lista_alt[[5]],main="Normal Q-Q Plot n=30"); qqline(lista_alt[[5]],col="red")
+qqnorm(lista_alt[[6]],main="Normal Q-Q Plot n=50"); qqline(lista_alt[[6]],col="red")
+par(mfrow=c(2,2))
+qqnorm(lista_alt[[7]],main="Normal Q-Q Plot n=60"); qqline(lista_alt[[7]],col="red")
+qqnorm(lista_alt[[8]],main="Normal Q-Q Plot n=100"); qqline(lista_alt[[8]],col="red")
+qqnorm(lista_alt[[9]],main="Normal Q-Q Plot n=200"); qqline(lista_alt[[9]],col="red")
+qqnorm(lista_alt[[10]],main="Normal Q-Q Plot n=500"); qqline(lista_alt[[10]],col="red")
+```
+
+### **3.4. Caso 4 **
+<div class=text-justify>
+El último caso, se ha extraído muestra aleatoria de tamaño ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** de una población de plantas con tamaño ***N = 1000*** de diez por ciento (10%) de plantas enfermas.
+
+A continuación, se muestra los datos y gráficos de distribución de la proporción de cada una de las muestras, se observa que, ***i)*** mientras la población tiene una proporción del 10% de plantas enfermas, la media de la proporción muestral indica lo mismo, es decir, la muestra tomada tiene una proporción del 10% de plantas enfermas; ***ii)*** mientras aumenta el tamaño de la muestra se observa que la distribución de las media proporcional se va transformando en una distribución simétrica, hasta convertirse en una normal; ***iii)*** mientras aumenta el tamaño de la muestra los estimadores presentan alta precisión, por lo cual, la varianza disminuye conforme aumenta los tamaños de la muestra.
+</div>
+
+```{r,echo=FALSE}
+par(mfrow=c(3,2))
+hist(lista_baj[[1]],main="Distribución muestral n=5",xlab="Fig 25. Media de las proporciones",prob = TRUE)
+db1 <- density(lista_baj[[1]])
+mb1 <- mean(lista_baj[[1]])
+vb1 <- var(lista_baj[[1]])
+abline(v=mb1,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db1,col="#0072F0",lwd=2)
+hist(lista_baj[[2]],main="Distribución muestral n=10",xlab="Fig 26. Media de las proporciones",prob = TRUE)
+db2 <- density(lista_baj[[2]])
+mb2 <- mean(lista_baj[[2]])
+vb2 <- var(lista_baj[[2]])
+abline(v=mb2,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db2,col="#0072F0",lwd=2)
+hist(lista_baj[[3]],main="Distribución muestral n=15",xlab="Fig 27. Media de las proporciones",prob = TRUE)
+db3 <- density(lista_baj[[3]])
+mb3 <- mean(lista_baj[[3]])
+vb3 <- var(lista_baj[[3]])
+abline(v=mb3,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db3,col="#0072F0",lwd=2)
+hist(lista_baj[[4]],main="Distribución muestral n=20",xlab="Fig 28. Media de las proporciones",prob = TRUE)
+db4 <- density(lista_baj[[4]])
+mb4 <- mean(lista_baj[[4]])
+vb4 <- var(lista_baj[[4]])
+abline(v=mb4,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db4,col="#0072F0",lwd=2)
+hist(lista_baj[[5]],main="Distribución muestral n=30",xlab="Fig 29. Media de las proporciones",prob = TRUE)
+db5 <- density(lista_baj[[5]])
+mb5 <- mean(lista_baj[[5]])
+vb5 <- var(lista_baj[[5]])
+abline(v=mb5,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db5,col="#0072F0",lwd=2)
+hist(lista_baj[[6]],main="Distribución muestral n=50",xlab="Fig 30. Media de las proporciones",prob = TRUE)
+db6 <- density(lista_baj[[6]])
+mb6 <- mean(lista_baj[[6]])
+vb6 <- var(lista_baj[[6]])
+abline(v=mb6,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db6,col="#0072F0",lwd=2)
+par(mfrow=c(2,2))
+hist(lista_baj[[7]],main="Distribución muestral n=60",xlab="Fig 31. Media de las proporciones",prob = TRUE)
+db7 <- density(lista_baj[[7]])
+mb7 <- mean(lista_baj[[7]])
+vb7 <- var(lista_baj[[7]])
+abline(v=mb7,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db7,col="#0072F0",lwd=2)
+hist(lista_baj[[8]],main="Distribución muestral n=100",xlab="Fig 32. Media de las proporciones",prob = TRUE)
+db8 <- density(lista_baj[[8]])
+mb8 <- mean(lista_baj[[8]])
+vb8 <- var(lista_baj[[8]])
+abline(v=mb8,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db8,col="#0072F0",lwd=2)
+hist(lista_baj[[9]],main="Distribución muestral n=200",xlab="Fig 33. Media de las proporciones",prob = TRUE)
+db9 <- density(lista_baj[[9]])
+mb9 <- mean(lista_baj[[9]])
+vb9 <- var(lista_baj[[9]])
+abline(v=mb9,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db9,col="#0072F0",lwd=2)
+hist(lista_baj[[10]],main="Distribución muestral n=500",xlab="Fig 34. Media de las proporciones",prob = TRUE)
+db10 <- density(lista_baj[[10]])
+mb10 <- mean(lista_baj[[10]])
+vb10 <- var(lista_baj[[10]])
+abline(v=mb10,col="#0072F0",lwd = 3, lty = 2:3)
+lines(db10,col="#0072F0",lwd=2)
+
+list_mb <- c(mb1,mb2,mb3,mb4,mb5,mb6,mb7,mb8,mb9,mb10)
+list_vb <- c(vb1,vb2,vb3,vb4,vb5,vb6,vb7,vb8,vb9,vb10)
+
+```
+
+```{r,echo=FALSE}
+df_mbaj <- data.frame("muestras"=muestras_chr); df_mbaj$media <- list_mb ; df_mbaj$varianza <- list_vb
+df_mbaj
+```
+<div class=text-justify>
+Así mismo, se puede observar la comparación de los distintos tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** evidencia que al ir aumentando los tamaños muestrales los estimadores tienden a ser insesgado, eficiente y consistente.  
+</div>
+
+```{r,echo=FALSE}
+list_df_baj <- list()
+
+for (i in 1:10) {
+  df_baj <- data.frame("proporcion"=lista_baj[[i]])
+  tma_muestra_baj <- as.character(muestra_vect[i])
+  tma_muestra_baj <- paste("n =",tma_muestra_baj)
+  df_baj$muestra <- tma_muestra_baj
+  list_df_baj[[i]] <- df_baj
+}
+
+df_total_baj <- bind_rows(list_df_baj[[1]],list_df_baj[[2]],list_df_baj[[3]],list_df_baj[[4]],list_df_baj[[5]],list_df_baj[[6]],list_df_baj[[7]],list_df_baj[[8]],list_df_baj[[9]],list_df_baj[[10]])
+```
+
+```{r,echo=FALSE}
+
+df_total_baj$muestra <- factor(df_total_baj$muestra,c("n = 5","n = 10","n = 15","n = 20","n = 30","n = 50","n = 60","n = 100","n = 200","n = 500"))
+
+ggplot(df_total_baj,aes(x=muestra,y=proporcion,fill=muestra))+
+  geom_boxplot()+
+  theme(legend.position = 'bottom')+
+  theme(panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())+
+  labs(x='Figura 35. Boxplot de las distribuciones de los estimadores',y='Proporción P',fill='Tamaño de Muestras')
+```
+<div class=text-justify>
+A continuación, se muestra una tabla de los resultados de la prueba ***SHAPIRO-WILK***, descrita en el primer caso, para cada uno de los tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500***, donde se puede observar la convergencia de la distribución de la media muestral a una distribución normal al aumentarse el tamaño de la muestra, más especificamente, a partir del tamaño de muestra ***n = 500***.
+</div>
+
+```{r,echo=FALSE}
+shpnb1 <- shapiro.test(lista_baj[[1]]) ; shpnb1 <- shpnb1$p.value ;shpnb1 <- formattable::comma(shpnb1,digits=2)
+shpnb2 <- shapiro.test(lista_baj[[2]]) ; shpnb2 <- shpnb2$p.value ; shpnb2 <- formattable::comma(shpnb2,digits=2)
+shpnb3 <- shapiro.test(lista_baj[[3]]); shpnb3 <- shpnb3$p.value; shpnb3 <- formattable::comma(shpnb3,digits=2)
+shpnb4 <- shapiro.test(lista_baj[[4]]); shpnb4 <- shpnb4$p.value; shpnb4 <- formattable::comma(shpnb4,digits=2)
+shpnb5 <- shapiro.test(lista_baj[[5]]); shpnb5 <- shpnb5$p.value; shpnb5 <- formattable::comma(shpnb5,digits=2)
+shpnb6 <- shapiro.test(lista_baj[[6]]); shpnb6 <- shpnb6$p.value; shpnb6 <- formattable::comma(shpnb6,digits=2)
+shpnb7 <- shapiro.test(lista_baj[[7]]); shpnb7 <- shpnb7$p.value; shpnb7 <- formattable::comma(shpnb7,digits=2)
+shpnb8 <- shapiro.test(lista_baj[[8]]); shpnb8 <- shpnb8$p.value; shpnb8 <- formattable::comma(shpnb8,digits=2)
+shpnb9 <- shapiro.test(lista_baj[[9]]); shpnb9 <- shpnb9$p.value; shpnb9 <- formattable::comma(shpnb9,digits=2)
+shpnb10 <- shapiro.test(lista_baj[[10]]); shpnb10 <- shpnb10$p.value; shpnb10 <- formattable::comma(shpnb10,digits=2)
+shp_baj <- c(shpnb1,shpnb2,shpnb3,shpnb4,shpnb5,shpnb6,shpnb7,shpnb8,shpnb9,shpnb10)
+
+df_bajshp <- data.frame("muestras"=muestras_chr); df_bajshp$shapiro <- shp_baj
+df_bajshp
+
+```
+<div class=text-justify>
+Así mismo, se muestra la prueba de normalidad de una linea recta, donde evidenciamos que a medida que aumenta los tamaños de muestras ***n = 5, 10, 15, 20, 30, 50, 60, 100, 200, 500*** los puntos se acercan a la línea recta.
+</div>
+
+```{r,echo=FALSE}
+par(mfrow=c(3,2))
+qqnorm(lista_baj[[1]],main="Normal Q-Q Plot n=5"); qqline(lista_baj[[1]],col="red")
+qqnorm(lista_baj[[2]],main="Normal Q-Q Plot n=10"); qqline(lista_baj[[2]],col="red")
+qqnorm(lista_baj[[3]],main="Normal Q-Q Plot n=15"); qqline(lista_baj[[3]],col="red")
+qqnorm(lista_baj[[4]],main="Normal Q-Q Plot n=20"); qqline(lista_baj[[4]],col="red")
+qqnorm(lista_baj[[5]],main="Normal Q-Q Plot n=30"); qqline(lista_baj[[5]],col="red")
+qqnorm(lista_baj[[6]],main="Normal Q-Q Plot n=50"); qqline(lista_baj[[6]],col="red")
+par(mfrow=c(2,2))
+qqnorm(lista_baj[[7]],main="Normal Q-Q Plot n=60"); qqline(lista_baj[[7]],col="red")
+qqnorm(lista_baj[[8]],main="Normal Q-Q Plot n=100"); qqline(lista_baj[[8]],col="red")
+qqnorm(lista_baj[[9]],main="Normal Q-Q Plot n=200"); qqline(lista_baj[[9]],col="red")
+qqnorm(lista_baj[[10]],main="Normal Q-Q Plot n=500"); qqline(lista_baj[[10]],col="red")
+```
+
+## **4. Conclusión**
+<div class=text-justify>
+El teorema del limite central indica que, independientemente de la forma de la distribución de población, la distribución muestral de medias se aproximará a la distribución de probabilidad normal, así como se evidenció en los ***casos 2,3 y 4***, donde la proporción de plantas enfermas era distinta para cada simulación, para el caso 2 era del 50%, para el caso 3 era del 90% y para el caso 4 era del 10%, y se comprobó que la distribución muestral de medias se aproxima a la distribución normal. Así mismo, cuanto mayor sea el número de observaciones en cada muestra, mayor será la convergencia.
+</div>
