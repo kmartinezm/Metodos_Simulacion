@@ -1,0 +1,393 @@
+---
+title: "Ejercicio 2"
+author: "Keyner Martinez Miranda, Jairo Enrique Alba."
+date: "5/3/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Segundo Punto Validación de resultados.
+
+El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la diferencia de las proporción muestrales a la distribución normal. 
+
+A continuación se presentan los siguientes pasos para su verificación:
+
+
+```{r,warning=FALSE, message=FALSE, results = 'hide'}
+#Generar la población
+GenerarPob = function(Tamaño = 1000, Enfermos = 0.5, Sanos = 0.5) {
+  E = round(Tamaño * Enfermos, 0)#redondear a cero decimales
+  S = round(Tamaño * Sanos, 0)#redondear a cero decimales
+  Poblacion = c(rep("Enfermo", E), rep("Sana",S))
+  #creo un vector con Enfermo  E veces y con Sana S veces( E ..E S..S).
+  print(paste("Lote Generado de tamaño: ", Tamaño, " Enfermos: ",E,"Sanos: ",S))
+  #combinan varias entradas en una cadena de caracteres, luego imprime los resultados
+  return(Poblacion)
+  #R  devolverá el resultado de cualquier comando que se ejecute en la última línea
+  #de la función
+ 
+}
+
+Lote = GenerarPob(Tamaño = 1000, Enfermos = 0.5, Sanos = 0.5)
+#mostar el tamaño de población y cuantos hay en cada categoria
+```
+
+
+  
+```{r,warning=FALSE, message=FALSE, results = 'hide'}
+#Funcion para generar la muestra
+GenerarMuestra = function(Poblacion, Tamaño, Condicion) {
+  if (Tamaño<=length(Poblacion)) { #condición muestra mas pequeña de la población
+    muestra = sample(x = Poblacion, size = Tamaño)#toma la muestra
+    P_muestra = sum(muestra == Condicion)/Tamaño # para calcular la proporción
+    return(P_muestra)#devuelve el resultado
+  }
+  else { #de lo contario si el tamaño de la muestra supera la población
+    print("Error: el tamaño de la muestra supera el tamaño de la población.")
+    return(-1)
+  }
+}
+
+#Generacion de la muestra de determinado tamaño
+
+n = 200 #tamaño de muestra
+muestra = GenerarMuestra (Poblacion = Lote, Tamaño = n, Condicion = "Enfermo") 
+#generación de la muestra, dando las condiciones respectivas
+
+print(paste("Para una muestra de tamaño:", n, "se obtuvo un ^P =",muestra))
+#imprimir los resultados
+```
+
+```{r,warning=FALSE, message=FALSE, echo = FALSE, results = 'hide'}
+#generación de 500 muestras de la población y mirar las proporciones muestrales de enfermos en cada una.
+GenerarMuestras_Iter = function(Poblacion, Tamaño, Condicion, Iteraciones) { #condiciones de la funcion
+  if (Tamaño<=length(Poblacion)) {
+    muestras_iter = array(NA,Iteraciones)#creación del array con NA, de dimensión el numero de iteraciones.
+    for (i in 1:Iteraciones) {
+      muestras_iter[i] = GenerarMuestra (Poblacion, Tamaño, Condicion)
+    }
+    return(muestras_iter)
+  }
+  else {
+    print("Error: el tamaño de la muestra supera el tamaño de la población.")
+    return(-1)
+  }
+}
+
+
+iter = 500
+P_muestras = GenerarMuestras_Iter (Poblacion = Lote, Tamaño = n, 
+                                   Condicion = "Enfermo",Iteraciones = iter)
+
+```
+
+```{r,warning=FALSE, message=FALSE,include = FALSE, echo = FALSE, results = 'hide'}
+hist(P_muestras, prob = TRUE, main = "Proporción enfermos en las 500 muestras")
+line = mean(P_muestras)
+abline(v=line, col="blue", lwd=3)
+lines(density(P_muestras), col = 2, lwd = 2)
+
+library(dplyr)
+
+# Diagrama de caja
+boxplot(P_muestras, main = "Proporción enfermos en las 500 muestras",
+        xlab = "Proporción enfermos", col = "green", horizontal=T)
+
+#install.packages("moments") solo una vez
+library(moments)
+mean(P_muestras)                                                         
+sd(P_muestras)                                                           
+min(P_muestras)                                                                                                 
+median(P_muestras)                                                       
+max(P_muestras)                                                                                               
+skewness(P_muestras)
+kurtosis(P_muestras)
+
+```
+
+
+
+```{r,warning=FALSE, message=FALSE,include = FALSE, echo = FALSE, results = 'hide'}
+t_Muestras = c(5,10,15,20,30,50,60,100,200,500)
+iter = 500
+
+
+for (i in 1:length(t_Muestras)) {
+     P_muestras = GenerarMuestras_Iter (Poblacion = Lote, Tamaño = t_Muestras[i], Condicion = "Enfermo",Iteraciones = iter)
+     par(mfrow=c(1,3))
+     hist(P_muestras, las=1, ylab = "Frecuencia", title = t_Muestras[i], main = paste("Muestra de tamaño:", t_Muestras[i]), col = "gray",prob = TRUE)
+     abline(v=mean(P_muestras), col="blue", lwd=3)
+     lines(density(P_muestras), col = 2, lwd = 2)
+     boxplot(P_muestras, xlab="Cuantiles teóricos", ylab="Cuantiles muestrales",main="qq-normalidad")
+     qqnorm(P_muestras, xlab="Cuantiles teóricos", ylab="Cuantiles muestrales",main="qq-normalidad")
+     qqline(P_muestras,col = 'red', lwd = 2, lty = 2)
+     print(paste('Para una muestra de tamaño: ', t_Muestras[i])) 
+     print(shapiro.test(P_muestras))
+     x=data.frame("ID"=i,"Tamaño_muestra"=t_Muestras[i], 
+                  "Media"=mean(P_muestras),
+                  "Mediana"=median(P_muestras),
+                  "Desvest"=sd(P_muestras),
+                  "Varianza"=var(P_muestras), 
+                  "Mín."=min(P_muestras), 
+                  "Máx"=max(P_muestras),
+                  "Asimetría"=skewness(P_muestras), 
+                  "Curtosis"= kurtosis(P_muestras)
+                  )
+    Resultado = rbind(x)
+     } 
+```
+
+
+
+
+
+La comparación de tratamientos es una práctica fundamental en las ciencias agropecuarias y para ello a nivel estadístico se cuenta con herramientas para apoyar el proceso de toma de decisiones y así poder lograr concluir con un alto grado de confianza sobre los resultados observados en una muestra. A través de la simulación es posible evaluar estimadores y sus propiedades, que nos permitan usarlos con toda tranquilidad.
+
+Suponga un escenario en el cual se aplicó tratamientos diferentes a dos lotes de una misma plantas y se desea analizar si alguno de los dos tratamientos presenta un mejor desempeño en el control de una plaga presente en ambos al momento inicial. Para ello utilizará como criterio de desempeño el tratamiento, el menor porcentaje de plantas enfermas presente después de un tiempo de aplicación (es decir, si se presentan o no diferencias en las proporciones de enfermos $p_{1}$ y $p_{2}$ - proporciones poblacionales-).
+
+
++ **Realice una simulación en la cual genere dos poblaciones de $N_{1}=1000$  (Lote 1) y $N_{2}=1500$
+ (Lote 2), para los cuales se asume que el porcentaje de individuos (plantas) enfermas en ambos lotes es del $10\%$ (es decir, sin diferencias entre los tratamientos).**
+ 
+```{r,warning=FALSE, message=FALSE}
+LoteA = GenerarPob(Tamaño = 1000, Enfermos = 0.1, Sanos = 0.9)
+```
+
+```{r,warning=FALSE, message=FALSE}
+LoteB = GenerarPob(Tamaño = 1500, Enfermos = 0.1, Sanos = 0.9)
+```
+
++  **Genere una función que permita obtener una muestra aleatoria de los lotes y calcule el estimador de la proporción muestral para cada lote $\hat{p_{1}}$ y $\hat{p_{2}}$ para un tamaño de muestra dado $n_{1}=n_{2}$. Calcule la diferencia entre los estimadores $\hat{p_{1}}-\hat{p_{2}}$.**
+
+```{r,warning=FALSE, message=FALSE}
+GenerarMuestra_P1P2 = function(Poblacion_1, Poblacion_2, Tamaño, Condicion) {
+  if (Tamaño<=length(Poblacion_1)||Tamaño<=length(Poblacion_2)) {
+    muestra_1 = sample(x = Poblacion_1, size = Tamaño)
+    P_muestra_1 = sum(muestra_1 == Condicion)/Tamaño
+    
+    muestra_2 = sample(x = Poblacion_2, size = Tamaño)
+    P_muestra_2 = sum(muestra_2 == Condicion)/Tamaño
+    
+    return(P_muestra_1-P_muestra_2)
+    }
+  else {
+    print("Error: el tamaño de la muestra supera el tamaño de la población.")
+    return(-1)
+  }
+}
+
+n = 400
+P1P2 = GenerarMuestra_P1P2(Poblacion_1 = LoteA, Poblacion_2 = LoteB, n, 
+                           Condicion = "Enfermo")
+print(paste("Para una muestra de tamaño:", n, "de ambos lotes se tiene un P1-P2 =",P1P2))
+
+```
++  **Repita el escenario anterior (b) 500 veces y analice los resultados en cuanto al comportamiento de los 500 estimadores (diferencias $p_{1} - p_{2}$). ¿Qué tan simétricos son los datos?, ¿Son siempre cero las diferencias?**
+
+```{r,warning=FALSE, message=FALSE}
+GenerarMuestras_Iter_P1P2 = function(Poblacion_1, Poblacion_2, Tamaño, Condicion, Iteraciones) 
+  {  if (Tamaño<=length(Poblacion_1)||Tamaño<=length(Poblacion_2)) {
+    muestras_iter = array(NA,Iteraciones)
+    for (i in 1:Iteraciones) {
+      muestras_iter[i] = GenerarMuestra_P1P2(Poblacion_1, Poblacion_2, Tamaño, Condicion)
+    }
+    return(muestras_iter)
+  }
+  else {
+    print("Error: el tamaño de la muestra supera el tamaño de la población.")
+    return(-1)
+  }
+}
+
+
+iter = 500
+P1P2_muestras = GenerarMuestras_Iter_P1P2 (Poblacion_1 = LoteA, 
+                                           Poblacion_2 = LoteB, Tamaño = n, 
+                                           Condicion = "Enfermo",Iteraciones = iter)
+
+boxplot(P1P2_muestras,prob = TRUE, main = "Diferencia de proporciones",
+        xlab = "P_1 - P_2", col = "green",horizontal=T)
+hist(P1P2_muestras,prob = TRUE, main = "Histograma con curva de densidad",
+     xlab="Diferencia de proporciones",ylab="Frecuencias")
+line = mean(P1P2_muestras)
+abline(v=line, col="blue", lwd=3)
+lines(density(P1P2_muestras), col = 2, lwd = 2)
+```
+
+
+
+```{r}
+Resultado4=data.frame("ID"=0,"Tamaño_muestra"=n, "Media"=mean(P1P2_muestras),"Mediana"=median(P1P2_muestras),"Desvest"=sd(P1P2_muestras),
+                      "Varianza"=var(P1P2_muestras), "Mín."=min(P1P2_muestras), "Máx"=max(P1P2_muestras),"Asimetría"=skewness(P1P2_muestras),
+                      "Curtosis"= kurtosis(P1P2_muestras))
+
+Resultado4
+```
+
+
+**Respuestas:**  
+
++ ¿Qué tan simétricos son los datos?
+
+Para la distribución de las diferencias la asimetría es muy baja al igual que la curtosis, lo cual se puede evidenciar haciendo uso del histograma y del diagrama de cajas y bigotes.
+
++ ¿Son siempre cero las diferencias?
+
+Para  muestras de tamaño 400 de ambos lotes la media de las diferencias proporcionales obtenidas $\mu_{\hat{p_{1}}-\hat{p_{2}}}$, son aproximadamente cero, sin embargo no todas las diferencias son cero y también se puede observar que la mediana de las diferencias si es cero.
+
++ **Realice los puntos b y c para tamaños de muestra $n_{1} = n_{2} = 5,10,15,20, 30, 50, 60, 100, 200, 500.$ Compare los resultados de los estimadores $(\hat{p_{1}} - \hat{p_{2}})$ en cuanto a la normalidad. También analice el comportamiento de las diferencias y evalúe. ¿Considera que es más probable concluir que existen diferencias entre los tratamientos con muestras grandes que pequeñas, es decir, cuál considera usted que es el efecto del tamaño de muestra en el caso de la comparación de proporciones?**
+
+```{r,warning=FALSE, message=FALSE}
+t_Muestras = c(5,10,15,20,30,50,60,100,200,500)
+iter = 500
+
+for (i in 1:length(t_Muestras)) {
+     P1P2_muestras = GenerarMuestras_Iter_P1P2 (Poblacion_1 = LoteA, Poblacion_2 = LoteB,
+                                               Tamaño = t_Muestras[i], Condicion = "Enfermo",
+                                                Iteraciones = iter)
+     par(mfrow=c(1,3))
+     hist(P1P2_muestras, las=1, ylab = "Frecuencia", title = t_Muestras[i],
+          main = paste("Muestra de tamaño:", t_Muestras[i]), col = "gray",prob = TRUE)
+     abline(v=mean(P1P2_muestras), col="blue", lwd=3)
+     lines(density(P1P2_muestras), col = 2, lwd = 2)
+     boxplot(P1P2_muestras, xlab="", ylab="P1P2_muestras",main="Diagrama de Cajas", col = "green")
+     qqnorm(P1P2_muestras, xlab="Cuantiles teóricos", ylab="Cuantiles muestrales",
+            main="qq-normalidad")
+     qqline(P1P2_muestras,col = 'red', lwd = 2, lty = 2)
+     print(paste('Para una muestra de tamaño: ', t_Muestras[i])) 
+     print(shapiro.test(P1P2_muestras))
+     x=data.frame("ID"=i,"Tamaño_muestra"=t_Muestras[i], 
+                  "Media"=mean(P1P2_muestras),
+                  "Mediana"=median(P1P2_muestras),
+                  "Desvest"=sd(P1P2_muestras),
+                  "Varianza"=var(P1P2_muestras), 
+                  "Mín."=min(P1P2_muestras), 
+                  "Máx"=max(P1P2_muestras),
+                  "Asimetría"=skewness(P1P2_muestras), 
+                  "Curtosis"= kurtosis(P1P2_muestras)
+                  )
+     Resultado4=rbind(Resultado4, x)
+     
+     } 
+```
+
+```{r,warning=FALSE, message=FALSE}
+Resultado4
+```
+
+Conclusión: Para analizar la normalidad nos fijaremos en el test de bondad de ajuste de Shapiro-Wilks el cual plantea lo siguiente: 
+
+
+**Hipótesis Nula**
+
+$H_{0}: F(x) = F_{0}(x)$ las diferencias  se ajustan a una distribución norma.
+
+**Hipótesis Alternativa**
+
+$H_{a}: F(x) \not= F_{0}(x)$ las diferencias **NO** se ajustan a una distribución normal.
+
+Eligiendo un nivel de significanza, de 0.05, cuando los tamaños de muestra son grandes, los resultados obtenidos nos arrojan  P-valores mayores a 0.05, lo cual nos conduce a no rechazar la hipótesis nula (Distribución normal),  en cuanto al sesgamiento y apuntamiento de la distribución de las diferencias de las proporciones también se observa bastante mejoría a nivel que los tamaños de las muestras aumentan y se puede visualizar a través de los diagramas de cajas y bigotes, histogramas y gráficos qq de normalidad. 
+
+
+
+
+
++ **Ahora realice nuevamente los puntos a-d bajo un escenario con dos lotes, pero de proporciones de enfermos diferentes ($p_{1} = 0.1$ y $p_{2} = 0.15$), es decir, el tratamiento del lote 1 si presentó un mejor desempeño reduciendo en un $5\%$ el porcentaje de enfermos. Bajo este nuevo escenario compare la distribución de estas diferencias $(\hat{p_{1}} - \hat{p_{2}})$ con las observadas bajo igualdad de condiciones en los lotes. ¿Qué puede concluir? ¿Existen puntos en los cuales es posible que se observen diferencias de $(p_{1}- p_{2}).$ bajo ambos escenarios (escenario 1: sin diferencias entre $p_{1}$ y $p_{2}$, escenario 2: diferencia de $5\%$)?**
+
+```{r,warning=FALSE}
+LoteA2 = GenerarPob(Tamaño = 1000, Enfermos = 0.1, Sanos = 0.9)
+```
+
+```{r,warning=FALSE}
+LoteB2 = GenerarPob(Tamaño = 1500, Enfermos = 0.15, Sanos = 0.85)
+
+```
+
+```{r,warning=FALSE, message=FALSE}
+n = 300
+P1P2_2 = GenerarMuestra_P1P2(Poblacion_1 = LoteA2, 
+                             Poblacion_2 = LoteB2, n, Condicion = "Enfermo")
+print(paste("Para una muestra de tamaño:", n, "de ambos lotes se tiene un P1-P2 =",P1P2_2))
+```
+
+```{r,warning=FALSE, message=FALSE}
+
+iter = 500
+
+P1P2_muestras_2 = GenerarMuestras_Iter_P1P2 (Poblacion_1 = LoteA2, Poblacion_2 = LoteB2, 
+Tamaño = n, Condicion = "Enfermo",Iteraciones = iter)
+
+hist(P1P2_muestras_2, prob= TRUE)
+line = mean(P1P2_muestras_2)
+abline(v=line, col="blue", lwd=3)
+lines(density(P1P2_muestras_2), col = 2, lwd = 2)
+```
+
+
+```{r,warning=FALSE, message=FALSE}
+Resultado5=data.frame("ID"=0,"Tamaño_muestra"=n, "Media"=mean(P1P2_muestras_2),"Mediana"=median(P1P2_muestras_2),
+                      "Desvest"=sd(P1P2_muestras_2),
+                      "Varianza"=var(P1P2_muestras_2), 
+                      "Mín."=min(P1P2_muestras_2), "Máx"=max(P1P2_muestras_2),"Asimetría"=skewness(P1P2_muestras_2),
+                      "Curtosis"= kurtosis(P1P2_muestras_2))
+
+Resultado5
+```
+
+
+```{r,warning=FALSE, message=FALSE}
+t_Muestras = c(5,10,15,20,30,50,60,100,200,500)
+iter = 500
+
+for (i in 1:length(t_Muestras)) {
+     P1P2_muestras = GenerarMuestras_Iter_P1P2 (Poblacion_1 = LoteA2, 
+                                                Poblacion_2 = LoteB2,  Tamaño = t_Muestras[i],
+                                                Condicion = "Enfermo",Iteraciones = iter)
+     par(mfrow=c(1,3))
+     hist(P1P2_muestras, las=1, ylab = "Frecuencia", title = t_Muestras[i],
+          prob = TRUE, main = paste("Muestra de tamaño:", t_Muestras[i]), col = "gray")
+     lines(density(P1P2_muestras),col="red", lwd=3)
+     abline(v=mean(P1P2_muestras), col="blue", lwd=3)
+      boxplot(P1P2_muestras, xlab="", ylab="P1P2_muestras",main="Diagrama de Cajas", col = "green")
+     qqnorm(P1P2_muestras, xlab="Cuantiles teóricos", ylab="Cuantiles muestrales",main="qq-normalidad")
+     qqline(P1P2_muestras,col = 'red', lwd = 2, lty = 2)
+     print(paste('Para una muestra de tamaño: ', t_Muestras[i])) 
+     print(shapiro.test(P1P2_muestras))
+     
+     x=data.frame("ID"=i,"Tamaño_muestra"=t_Muestras[i], 
+                  "Media"=mean(P1P2_muestras),
+                  "Mediana"=median(P1P2_muestras),
+                  "Desvest"=sd(P1P2_muestras),
+                  "Varianza"=var(P1P2_muestras), 
+                  "Mín."=min(P1P2_muestras), 
+                  "Máx"=max(P1P2_muestras),
+                  "Asimetría"=skewness(P1P2_muestras), 
+                  "Curtosis"= kurtosis(P1P2_muestras)
+                  )
+     Resultado5=rbind(Resultado5,x)
+} 
+
+```
+
+
+
+```{r,warning=FALSE, message=FALSE}
+Resultado5
+```
+
+
++ **Análisis**
+
+En ambas situaciones  hacen que el $\hat{p_{1}} - \hat{p_{2}}$ converja a $P_{1} - P_{2}$. Es de notar que en el segundo caso  como en el escenario B se presenta un mejor desempeño en el lote A del 5%. $\hat{P_{1}}-\hat{P_{2}}$ converjan a esta diferencia -0.05 lo que nos indicaría de manera general que si hay un mejoramiento diferencial X entre las poblaciones, las diferencias en muestras de ambos lotes $P_{1} - P_{2}$ tenderían a ser X.
+
+Con el ejercicio anterior podemos verificar lo siguiente:
+
++  $\mu_{\hat{p_{1}} - \hat{p_{2}}} = E(\hat{p_{1}} - \hat{p_{2}}) = E(\hat{p_{1}} )- E(\hat{p_{2}}) = P_{1} - P_{2}.$
+
++ $\sigma^{2}_{\hat{p_{1}} - \hat{p_{2}}} = \frac{P_{1}(1-P_{1})}{n_{1}} + \frac{P_{2}(1-P_{2})}{n_{2}}$
+
+y la distribución de la diferencia de las proporciones siguen una distribución normal con media $P_{1} - P_{2}$ y desviación estándar $\sqrt{\frac{P_{1}(1-P_{1})}{n_{1}} + \frac{P_{2}(1-P_{2})}{n_{2}}}$, por lo tanto 
+$z = \frac{(\hat{p_{1}} - \hat{p_{2}}) - (P_{1} - P_{2})}{\sqrt{\frac{P_{1}(1-P_{1})}{n_{1}} + \frac{P_{2}(1-P_{2})}{n_{2}}}}$ sigue una distribución normal estándar.
